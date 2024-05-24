@@ -1,5 +1,6 @@
 import numpy as np
 import bentests as bt
+import function as func
 from layer import *
 from network import Network
 from DataHandler import *
@@ -42,15 +43,15 @@ class Maths(bt.testGroup):
 class Layers(bt.testGroup):
 	def testLayerSizeGiven(self):
 		new_layer = Layer(layer_size=3)
-		bt.assertEquals(new_layer.size,3)
+		bt.assertEquals(len(new_layer),3)
 
 	def testDefaultLayerSize(self):
 		new_layer = Layer()
-		bt.assertEquals(new_layer.size,10)
+		bt.assertEquals(len(new_layer),10)
 
 	def testDefaultWeightedLayerSize(self):
 		new_layer = WeightedLayer(prevLayer=Layer())
-		bt.assertEquals(new_layer.size,10)
+		bt.assertEquals(len(new_layer),10)
 
 	def testWeightedLayerShape(self):
 		previous_layer = Layer(layer_size=15)
@@ -62,11 +63,11 @@ class Layers(bt.testGroup):
 		main_layer = WeightedLayer(previous_layer, layer_size=10)
 		bt.assertEquals(main_layer.biases.shape, (10,1))
 
-	def testLayerActivations(self):
+	def testDefaultLayerActivations(self):
 		layer = InputLayer(layer_size=2)
 		bt.assertEquals(layer.activations, np.array([[0.0],[0.0]]))
 
-	def testWeightedLayerActivations(self):
+	def testDefaultWeightedLayerActivations(self):
 		input_layer = InputLayer(layer_size=3)
 		first_hidden_layer = WeightedLayer(prevLayer=input_layer, layer_size=3)
 		bt.assertEquals(first_hidden_layer.activations, np.array([[0.0],[0.0],[0.0]]))
@@ -82,9 +83,9 @@ class Layers(bt.testGroup):
 		)
 
 	def test_feed_forward_with_zero_weights(self):
-		network = Network((2,3,4))
+		network = Network((1,3,4))
 		data_handler = DataHandler()
-		sample = data_handler.read_samples()[0]
+		sample = data_handler.read_samples(isTesting=True)[0]
 		network.setInputLayer(sample.inputs)
 		network.feedforward()
 		bt.assertEquals(network.layers[1].activations, np.array([[0.0],[0.0],[0.0]]))
@@ -109,9 +110,9 @@ class NetworkTests(bt.testGroup):
 		)
 
 	def testFeedForwardZeroed(self):
-		network = Network((2,3,4,1))
+		network = Network((1,3,4,1))
 		data_handler = DataHandler()
-		sample = data_handler.read_samples()[0]
+		sample = data_handler.read_samples(isTesting=True)[0]
 		network.setInputLayer(sample.inputs)
 		network.feedforward()
 		bt.assertEquals(
@@ -138,12 +139,12 @@ class NetworkTests(bt.testGroup):
 		) # all neurons end up the same cuz the weights and biases are the same
 
 	def testInputLayer(self):
-		network = Network((2,3,4))
+		network = Network((1,3,4))
 		data_handler = DataHandler()
-		sample = data_handler.read_samples()[0]
+		sample = data_handler.read_samples(isTesting=True)[0]
 		network.setInputLayer(sample.inputs)
 		bt.assertEquals(network.layers[0].activations, np.array(
-			[[0.8410888466588518],[0.1267111713120581]] # i need a better method for testing this part than just copy pasting the first two items..
+			[[0.5164992228583118]] # i need a better method for testing this part than just copy pasting the first two items..
 		))
 
 	def testStoreBiases(self):
@@ -166,9 +167,31 @@ class NetworkTests(bt.testGroup):
 			np.array([[0.4, 0.4],[0.4, 0.4],[0.4, 0.4],[0.4, 0.4],[0.4, 0.4]])
 		)
 
+class Functions(bt.testGroup):
+	def testRelu(self):
+		startingMatrix = np.array([[0, 1], [3, -2]])
+		main_func = func.Relu()
+		result = main_func(startingMatrix)
+		bt.assertEquals(result, np.array([[0, 1], [3, 0]])) 			
+
+	def testReluPrime(self):
+		startingMatrix = np.array([[0.3, 0], [-0.9, -45], [0, 23]])
+		relu = func.Relu()
+		result = relu.derivative(startingMatrix)
+		bt.assertEquals(result, np.array([[1,0], [0, 0], [0, 1]]))		
+
+bt.test_all(
+	Functions,
+	Maths,
+	Layers,
+	NetworkTests,
+)
+
+
 # class DataHandlerTests(bt.testGroup):
 # 	'''
-# 	DON'T RUN IF YOU KEEP THE TEST DATA UNCHANGED
+# 	DON'T RUN IF YOU KEEP THE TEST DATA UNCHANGED.
+#	Maybe find a way to run on custom files
 # 	'''
 # 	def testSampleInputType(self):
 # 		data_handler = DataHandler(training_size=10,testing_size=10)
@@ -190,9 +213,3 @@ class NetworkTests(bt.testGroup):
 # 		data_handler.write_data()
 # 		samples = data_handler.read_samples()
 # 		bt.assertEquals(samples[0].result == 0.0 or samples[0].result == 1.0, True)
-
-bt.test_all(
-	Maths,
-	Layers,
-	NetworkTests,
-)

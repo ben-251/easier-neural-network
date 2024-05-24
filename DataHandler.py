@@ -1,5 +1,5 @@
 import random
-from typing import Dict, Tuple, List
+from typing import Dict, Final, Tuple, List
 from logic import *
 from enum import Enum
 import json
@@ -13,13 +13,13 @@ class Sample:
 	result = 1.0
 	'''
 	def __init__(self, inputs: List[float]|float, result: float):
-		if isinstance(inputs,float):
+		if isinstance(inputs,float|int):
 			self.inputs = [inputs]
 		else:
 			self.inputs = inputs
-		self.result = result
+		self.result:float = result
 
-class DataType(Enum):
+class DataLocation(Enum):
 	TESTING = "data/test_data.json"
 	TRAINING = "data/training_data.json"
 
@@ -27,6 +27,8 @@ class DataHandler:
 	'''
 	Primary tool for creating, writing, and reading data for training and testing the model.
 	'''
+	GRADIENT:Final = 2
+	Y_INTERCEPT:Final = 3
 	def __init__(self,training_size:int|None=None, testing_size: int|None = None) -> None:
 		if training_size is None:
 			training_size = 60_000
@@ -42,10 +44,8 @@ class DataHandler:
 	def generate_samples(self, n) -> List[Sample]:
 		samples: List[Sample] = []
 		for _ in range(n):
-			m = 2.0
-			c = 3.0
 			x = random.uniform(-5,5) # previously 5*random.random()*(-1)**random.choice([0,-1]) lol
-			y = m*x + c
+			y = self.GRADIENT *x + self.Y_INTERCEPT
 			samples.append(Sample(x,y))
 		return samples
 	
@@ -54,11 +54,10 @@ class DataHandler:
 		self.write_samples(self.testing_data, isTraining=False)
 	
 	def write_samples(self, data: List[Sample], isTraining:bool|None=None) -> None:
-		data_type = DataType.TRAINING if isTraining else DataType.TESTING
+		file_name = DataLocation.TRAINING if isTraining else DataLocation.TESTING
 		data_as_json = self.data_to_json(data)
-		with open(data_type.value, "w") as f:
+		with open(file_name.value, "w") as f:
 			f.write(data_as_json)
-
 
 	def data_to_json(self, data: List[Sample]) -> str:
 		samples = []
@@ -69,7 +68,7 @@ class DataHandler:
 				"output": 0.0
 			}
 
-			for input_ in sample.inputs: #type: ignore REALLY WEIRD THIS ONE
+			for input_ in sample.inputs:
 				sample_as_dict["inputs"].append(input_)
 
 			sample_as_dict["output"] = sample.result
@@ -81,7 +80,7 @@ class DataHandler:
 		Default value of isTesting is effectively false
 		'''
 		samples = []
-		data_type = DataType.TESTING if isTesting else DataType.TRAINING
+		data_type = DataLocation.TESTING if isTesting else DataLocation.TRAINING
 		with open(data_type.value, "r") as f:
 			data = json.load(f)
 			for data_sample in data:

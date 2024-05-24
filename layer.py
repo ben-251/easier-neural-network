@@ -1,6 +1,7 @@
 import numpy as np
 from DataHandler import DataHandler
-from logic import *
+import function as func
+# from logic import *
 
 class Layer:
 	def __init__(self, layer_size: int | None = None):
@@ -8,6 +9,9 @@ class Layer:
 			layer_size = 10
 		self.size: int = layer_size
 		self.activations: np.ndarray = np.zeros((layer_size,1))
+	
+	def __len__(self):
+		return self.activations.shape[0]
 
 class WeightedLayer(Layer):	
 	'''
@@ -23,13 +27,15 @@ class WeightedLayer(Layer):
 			customWeightValue = 0.0 # defaults to zero for now
 		if customBiasValue is None:
 			customBiasValue = 0.0
-		self.weights: np.ndarray = np.zeros((self.size, prevLayer.size))+customWeightValue #TODO: make Weights and biases randomised
-		self.biases: np.ndarray = np.zeros((self.size, 1))+customBiasValue
+		self.weights: np.ndarray = np.zeros((len(self), len(prevLayer))) + customWeightValue #TODO: make Weights and biases randomised
+		self.biases: np.ndarray = np.zeros((len(self), 1)) + customBiasValue
 	
 	def updateActivations(self, previous_layer: Layer):
-		self.activations = Relu().main(np.dot(self.weights, previous_layer.activations) + self.biases)
+		relu = func.Relu()
+		self.activations = relu(
+			np.dot(self.weights, previous_layer.activations) + self.biases
+		)
 	
-
 class InputLayer(Layer):
 	def __init__(self, layer_size: int | None = None):
 		super().__init__(layer_size = layer_size)
