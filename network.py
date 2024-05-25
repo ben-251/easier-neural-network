@@ -1,11 +1,19 @@
 from itertools import pairwise
-from typing import Iterable
+from os import error
+from typing import Iterable, Optional, Type
 from DataHandler import *
+from function import MSECost, CostFunction
 from layer import *
 import numpy as np
 
 class Network:
-	def __init__(self,layer_sizes: Iterable[int], learning_rate:float|None=None, isTesting:bool|None=None, customBiasValue: float|None = None, customWeightValue: float|None = None):
+	def __init__(self,layer_sizes: Iterable[int],
+				 learning_rate:Optional[float]=None,
+				 isTesting:Optional[bool]=None,
+				 customBiasValue: Optional[float] = None,
+				 customWeightValue: Optional[float] = None,
+				 error_function: Optional[Type[CostFunction]] = None
+				):
 		'''
 		Creates a Simple Network with each layer size determining the number of total layers,
 		where the first is an input layer and the last is an output one.
@@ -13,9 +21,14 @@ class Network:
 		The learning rate determines the size of each step of the gradient descent during backpropagation
 		`isTesting` sets up the network to train or test the model. default behaviour is training
 		'''
-		self.initialise_layers(layer_sizes,customWeightValue=customWeightValue, customBiasValue=customBiasValue)
+		self.initialise_layers(
+			layer_sizes,
+			customWeightValue=customWeightValue,
+			customBiasValue=customBiasValue
+		)
 		self.learning_rate = learning_rate
 		self.isTesting = True if isTesting else False # Kept this way to handle none automatically
+		self.error_function = MSECost() if error_function is None else error_function()
 	
 	def initialise_layers(self, layer_sizes: Iterable[int],customWeightValue, customBiasValue):
 		'''

@@ -10,18 +10,6 @@ class Ignore(bt.testGroup):
 	...
 
 class Maths(bt.testGroup):
-	def testRelu(self):
-		startingMatrix = np.array([[1, -2], [3, 0]])
-		relu = Relu()
-		result = relu.main(startingMatrix) #hmmm not sure what to do
-		bt.assertEquals(result, np.array([[1, 0], [3, 0]])) 
-
-	def testReluPrime(self):
-		startingMatrix = np.array([[0.3, 0], [-0.9, -45], [0, 23]])
-		relu = Relu()
-		result = relu.derivative(startingMatrix)
-		bt.assertEquals(result, np.array([[1,0], [0, 0], [0, 1]]))
-
 	def testToBitZero(self):
 		n = to_bit(0.1)
 		bt.assertEquals(n, 0.0)
@@ -30,15 +18,27 @@ class Maths(bt.testGroup):
 		n = to_bit(0.5)
 		bt.assertEquals(n, 1)
 
-	def testCostFunction(self):
-		cost_function = CostFunction()
-		cost = cost_function.main(0.2,0.5)
+	def testMSECostFunction(self):
+		cost_function = func.MSECost()
+		cost = cost_function(0.2,0.5)
 		bt.assertAlmostEquals(cost, 0.09)
 
-	def testCostFunctionDerivative(self):
-		cost_function = CostFunction()
+	def testMSEDerivative(self):
+		cost_function = func.MSECost()
 		cost_derivative = cost_function.derivative(0.2,0.5)
 		bt.assertAlmostEquals(cost_derivative, -0.6)
+
+	def testRelu(self):
+		startingMatrix = np.array([[0, 1], [3, -2]])
+		main_func = func.Relu()
+		result = main_func(startingMatrix)
+		bt.assertEquals(result, np.array([[0, 1], [3, 0]])) 			
+
+	def testReluPrime(self):
+		startingMatrix = np.array([[0.3, 0], [-0.9, -45], [0, 23]])
+		relu = func.Relu()
+		result = relu.derivative(startingMatrix)
+		bt.assertEquals(result, np.array([[1,0], [0, 0], [0, 1]]))	
 
 class Layers(bt.testGroup):
 	def testLayerSizeGiven(self):
@@ -167,49 +167,9 @@ class NetworkTests(bt.testGroup):
 			np.array([[0.4, 0.4],[0.4, 0.4],[0.4, 0.4],[0.4, 0.4],[0.4, 0.4]])
 		)
 
-class Functions(bt.testGroup):
-	def testRelu(self):
-		startingMatrix = np.array([[0, 1], [3, -2]])
-		main_func = func.Relu()
-		result = main_func(startingMatrix)
-		bt.assertEquals(result, np.array([[0, 1], [3, 0]])) 			
-
-	def testReluPrime(self):
-		startingMatrix = np.array([[0.3, 0], [-0.9, -45], [0, 23]])
-		relu = func.Relu()
-		result = relu.derivative(startingMatrix)
-		bt.assertEquals(result, np.array([[1,0], [0, 0], [0, 1]]))		
 
 bt.test_all(
-	Functions,
 	Maths,
 	Layers,
 	NetworkTests,
 )
-
-
-# class DataHandlerTests(bt.testGroup):
-# 	'''
-# 	DON'T RUN IF YOU KEEP THE TEST DATA UNCHANGED.
-#	Maybe find a way to run on custom files
-# 	'''
-# 	def testSampleInputType(self):
-# 		data_handler = DataHandler(training_size=10,testing_size=10)
-# 		data_handler.create_data()
-# 		data_handler.write_data()
-# 		samples = data_handler.read_samples()
-# 		bt.assertEquals(type(samples[0].inputs), tuple)
-	
-# 	def testSampleOutputType(self):
-# 		data_handler = DataHandler(training_size=10,testing_size=10)
-# 		data_handler.create_data()
-# 		data_handler.write_data()
-# 		samples = data_handler.read_samples()
-# 		bt.assertEquals(type(samples[0].result), float)		
-
-# 	def testSampleOutputRange(self):
-# 		data_handler = DataHandler(training_size=10,testing_size=10)
-# 		data_handler.create_data()
-# 		data_handler.write_data()
-# 		samples = data_handler.read_samples()
-# 		bt.assertEquals(samples[0].result == 0.0 or samples[0].result == 1.0, True)
